@@ -8,6 +8,9 @@ use tock_registers::register_bitfields;
 pub enum AccRegisters {
     CHIP_ID     = 0x00,
     PWR_CTRL    = 0x7D,
+
+    TEMP_MSB    = 0x22,
+    TEMP_LSB    = 0x23,
 }
 
 #[derive(Copy, Clone, Debug)]

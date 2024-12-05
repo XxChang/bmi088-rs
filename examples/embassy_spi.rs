@@ -25,22 +25,33 @@ async fn main(_spawner: Spawner) -> ! {
 
     let spi_bus: SpiBusAlias = Mutex::new(spi);
     let gyro_cs = Output::new(p.PC14, Level::High, Speed::High);
-    // let acc_cs = Output::new(p.PC13, Level::High, Speed::High);
+    let acc_cs = Output::new(p.PC13, Level::High, Speed::High);
 
-    // let spi_acc = SpiDevice::new(&spi_bus, acc_cs);
+    let spi_acc = SpiDevice::new(&spi_bus, acc_cs);
     let spi_gyro =  SpiDevice::new(&spi_bus, gyro_cs);
 
     let mut gyro = Bmi088::new_gyro_with_spi(spi_gyro);
-    // let mut acc = Bmi088::new_acc_with_spi(spi_acc);
+    let mut acc = Bmi088::new_acc_with_spi(spi_acc);
+
+    Timer::after_millis(1).await;
+
+    acc.dummy_read().await.unwrap();
 
     let chip_id = gyro.chip_id().await.unwrap();
     info!("gyro chip id: {:02X}", chip_id);
+
+    let chip_id = acc.chip_id().await.unwrap();
+    info!("acc chip id: {:02X}", chip_id);
 
     if let Err(_) = gyro.check_sensor().await {
         error!("Check gyro failed",);
     } else {
         info!("gyro function proper");
     }
+
+    acc.enter_normal_mode().await.unwrap();
+
+    Timer::after_micros(450).await;
     // let mut data = [0x00u8 + 0x80, 0];
     // let operation = Operation::TransferInPlace(&mut data);
     // spi_acc.transaction(&mut [operation]).await.unwrap();
@@ -56,12 +67,13 @@ async fn main(_spawner: Spawner) -> ! {
     // info!("data {:02X}", data[1]);
 
     loop {
-        // let (x, y, z) = gyro.burst_read_xyz_rate().await.unwrap();
-        let x = gyro.read_x_axis().await.unwrap();
-        let y = gyro.read_y_axis().await.unwrap();
-        let z = gyro.read_z_axis().await.unwrap();
+        let (x, y, z) = gyro.data().await.unwrap();
+        let temp = acc.temperature().await.unwrap();
+        // let x = gyro.read_x_axis().await.unwrap();
+        // let y = gyro.read_y_axis().await.unwrap();
+        // let z = gyro.read_z_axis().await.unwrap();
         
-        info!("x: {}, y: {}, z: {}", x, y, z);
+        info!("x: {}, y: {}, z: {}, temp: {}", x, y, z, temp);
         // info!("Hello, World!");
         Timer::after_secs(1).await;
     }

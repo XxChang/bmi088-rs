@@ -1,7 +1,7 @@
 //! This is a platform agnostic Async Rust driver for the BMI088 IMU.
 //! inertial measurement unit using the ['embedded-hal-async'] traits.
-//! 
-//! 
+//!
+//!
 
 #![deny(unsafe_code)]
 #![no_std]
@@ -9,16 +9,15 @@
 
 use core::marker::PhantomData;
 
-mod register_address;
-pub mod interface;
-pub mod gyro_impl;
 pub mod acc_impl;
+pub mod gyro_impl;
+pub mod interface;
+pub mod register_address;
 
 #[derive(Debug)]
 pub struct Bmi088<DI> {
     _p: PhantomData<DI>,
 }
-
 
 #[derive(Debug)]
 #[cfg_attr(feature = "defmt-03", derive(defmt::Format))]
@@ -26,6 +25,8 @@ pub enum Error<E> {
     IOError(E),
 
     GyroFunctionUnproper,
+
+    NoDrdy,
 }
 
 mod private {
